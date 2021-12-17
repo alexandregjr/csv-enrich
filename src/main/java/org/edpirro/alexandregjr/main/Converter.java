@@ -1,5 +1,7 @@
 package org.edpirro.alexandregjr.main;
 import org.apache.jena.ontology.Individual;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFormatter;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -8,21 +10,21 @@ import java.nio.charset.StandardCharsets;
 public class Converter {
     public static void main(String[] args) {
 
-        String filePath = "E:\\Documents\\Git\\csv-enrich\\data.csv";
+        String filePath = "data.csv";
 
         Charset ch = StandardCharsets.UTF_8;
         String separator = "\t";
         String ns = "http://alexandregjr.edpirro.org/gbif#";
 
         Ontology onto = new Ontology(ns, "gbif");
+        RQEngine engine = new RQEngine("https://dbpedia.org/sparql");
 
         try (InputStream is = new FileInputStream(filePath);
              Reader r = new InputStreamReader(is, ch);
-            BufferedReader br = new BufferedReader(r)) {
+             BufferedReader br = new BufferedReader(r)) {
 
-            br.lines().limit(5).forEach(line -> {
+            br.lines().skip(1).limit(5).forEach(line -> {
                 String[] data = line.split(separator);
-
 
                 Individual organism = onto.createIndividual(data[34], onto.getClass("Organism"));
                 organism.addProperty(onto.getDatatypeProperty("kingdom"), data[3]);
@@ -41,12 +43,16 @@ public class Converter {
                 location.addProperty(onto.getDatatypeProperty("latitude"), data[21]);
                 location.addProperty(onto.getDatatypeProperty("longitude"), data[22]);
 
+                System.out.println(Query.locationByCityNameQuery(data[17]));
+                engine.createQueryByValue(Query.locationByCityNameQuery(data[17]));
+                ResultSet result = engine.executeRemoteSelectQuery();
+                System.out.println(ResultSetFormatter.asText(result));
 
-                Individual occurence = onto.createIndividual(data[2], onto.getClass("Occurrence"));
-                occurence.addProperty(onto.getDatatypeProperty("date"), data[29]);
-                occurence.addProperty(onto.getDatatypeProperty("status"), data[18]);
-                occurence.addProperty(onto.getObjectProperty("organism"), organism);
-                occurence.addProperty(onto.getObjectProperty("location"), location);
+                Individual occurrence = onto.createIndividual(data[2], onto.getClass("Occurrence"));
+                occurrence.addProperty(onto.getDatatypeProperty("date"), data[29]);
+                occurrence.addProperty(onto.getDatatypeProperty("status"), data[18]);
+                occurrence.addProperty(onto.getObjectProperty("organism"), organism);
+                occurrence.addProperty(onto.getObjectProperty("location"), location);
                 
             });
         } catch (IOException e) {
