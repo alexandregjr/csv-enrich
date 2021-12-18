@@ -82,6 +82,10 @@ public class Ontology {
         return this.model.createIndividual(this.namespace + name, type);
     }
 
+    public Individual createIndividual(String name, OntClass type, String ns) {
+        return this.model.createIndividual(ns + name, type);
+    }
+
     public void writeModel() {
         this.model.write(System.out, "ttl");
     }

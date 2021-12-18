@@ -12,9 +12,21 @@ public class Query {
             "           VALUES ?label { \"%s\"@en} .\n" +
             "       ?place geo:lat ?lat .\n" +
             "       ?place geo:long ?lng .\n" +
-            "   }";
+            "   } LIMIT 10";
 
     public static String locationByCityNameQuery(String city) {
-        return String.format(LOCATION_BY_CITY_NAME, "Madrid");
+        return String.format(LOCATION_BY_CITY_NAME, city);
+    }
+
+    public static final String ORGANISM_BY_SPECIES =
+            "PREFIX up: <http://purl.uniprot.org/core/>\n" +
+            "SELECT DISTINCT ?species ?label\n" +
+            "   WHERE { \n" +
+            "       ?species up:scientificName ?label\n" +
+            "           VALUES ?label { \"%s\"} .\n" +
+            "   } LIMIT 10";
+
+    public static String getOrganismBySpecies(String species) {
+        return String.format(ORGANISM_BY_SPECIES, species);
     }
 }
