@@ -18,15 +18,14 @@ public class Query {
         return String.format(LOCATION_BY_CITY_NAME, city);
     }
 
-    public static final String ORGANISM_BY_SPECIES =
-            "PREFIX up: <http://purl.uniprot.org/core/>\n" +
-            "SELECT DISTINCT ?species ?label\n" +
+    public static final String ORGANISM_BY_ID =
+            "PREFIX wdt: <http://www.wikidata.org/prop/direct/>\n" +
+            "SELECT DISTINCT ?species\n" +
             "   WHERE { \n" +
-            "       ?species up:scientificName ?label\n" +
-            "           VALUES ?label { \"%s\"} .\n" +
+            "       ?species wdt:P846 \"%s\" .\n" +
             "   } LIMIT 10";
 
-    public static String getOrganismBySpecies(String species) {
-        return String.format(ORGANISM_BY_SPECIES, species);
+    public static String getOrganismByTaxonId(String id) {
+        return String.format(ORGANISM_BY_ID, id);
     }
 }

@@ -18,7 +18,7 @@ public class Converter {
         String ns = "http://alexandregjr.edpirro.org/gbif#";
 
         Ontology onto = new Ontology(ns, "gbif");
-        RQEngine engineUP = new RQEngine("http://sparql.uniprot.org");
+        RQEngine engineWD = new RQEngine("http://query.wikidata.org/sparql");
         RQEngine engineDBP = new RQEngine("https://dbpedia.org/sparql");
 
         try (InputStream is = new FileInputStream(filePath);
@@ -30,8 +30,8 @@ public class Converter {
                 ResultSet result;
 
                 Individual organism;
-                engineUP.createQueryByValue(Query.getOrganismBySpecies(data[9]));
-                result = engineUP.executeRemoteSelectQuery();
+                engineWD.createQueryByValue(Query.getOrganismByTaxonId(data[33]));
+                result = engineWD.executeRemoteSelectQuery();
                 if (result.hasNext()) {
                     organism = onto.createIndividual(result.next().get("species").toString(), onto.getClass("Organism"), "");
                 } else {
