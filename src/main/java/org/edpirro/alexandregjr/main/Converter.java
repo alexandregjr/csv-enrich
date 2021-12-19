@@ -12,9 +12,26 @@ public class Converter {
     public static void main(String[] args) {
 
         String outputfile = null;
-        if(args.length > 0) {
+        int offset, limit;
+        offset = 0;
+        limit = 5;
+        if(args.length == 1) {
             outputfile = args[0];
+        } else if(args.length == 2) {
+            offset = Integer.parseInt(args[0]);
+            limit = Integer.parseInt(args[1]);
+        } else if(args.length > 2) {
+            outputfile = args[0];
+            offset = Integer.parseInt(args[1]);
+            limit = Integer.parseInt(args[2]);
         }
+
+        if(offset < 0 || limit < 0) {
+            offset = 0;
+            limit = 236489; // maxElems + 1 -> all items
+        }
+        String format = "Exporting lines %d to %d, model will attempt to write to %s.";
+        System.out.println(String.format(format, offset + 1, offset + limit, outputfile == null ? "the standard output" : outputfile));
 
         String filePath = "data.csv";
 
@@ -25,15 +42,19 @@ public class Converter {
         Ontology onto = new Ontology(ns, "gbif");
         RQEngine engineWD = new RQEngine("http://query.wikidata.org/sparql");
         RQEngine engineDBP = new RQEngine("https://dbpedia.org/sparql");
+        int[] count = {offset + 1};
+
 
         try (InputStream is = new FileInputStream(filePath);
              Reader r = new InputStreamReader(is, ch);
              BufferedReader br = new BufferedReader(r)) {
 
-            br.lines().skip(1).limit(5).forEach(line -> {
+            br.lines().skip(1 + offset).limit(limit).forEach(line -> {
+                System.out.println("Processing line " + count[0] + "...");
                 String[] data = line.split(separator);
                 ResultSet result;
 
+                System.out.println("\tFetching organism...");
                 Individual organism;
                 engineWD.createQueryByValue(Query.getOrganismByTaxonId(data[33]));
                 result = engineWD.executeRemoteSelectQuery();
@@ -51,6 +72,7 @@ public class Converter {
                 organism.addProperty(onto.getDatatypeProperty("genus"), data[8]);
                 organism.addProperty(onto.getDatatypeProperty("species"), data[9]);
 
+                System.out.println("\tFetching location...");
                 Individual location;
                 String locationName = data[16].split(",")[0];
                 engineDBP.createQueryByValue(Query.locationByCityNameQuery(locationName));
@@ -72,6 +94,7 @@ public class Converter {
                 occurrence.addProperty(onto.getDatatypeProperty("status"), data[18]);
                 occurrence.addProperty(onto.getObjectProperty("organism"), organism);
                 occurrence.addProperty(onto.getObjectProperty("location"), location);
+                System.out.println("Done with line " + count[0]++ + "!\n");
                 
             });
         } catch (IOException e) {

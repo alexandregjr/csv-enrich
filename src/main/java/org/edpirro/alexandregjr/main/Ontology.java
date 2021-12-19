@@ -98,7 +98,7 @@ public class Ontology {
                 PrintWriter pw = new PrintWriter(filename);
                 this.model.write(pw, "ttl");
             } catch (Exception e) {
-                System.out.println("Could not write to file " + filename + ". Writing to Sytem.out instead.");
+                System.out.println("Could not write to file " + filename + ". Writing to System.out instead.");
                 this.model.write(System.out, "ttl");
             }
             
