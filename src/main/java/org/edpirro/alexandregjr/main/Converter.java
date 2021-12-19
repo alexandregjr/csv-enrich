@@ -11,6 +11,11 @@ import java.nio.charset.StandardCharsets;
 public class Converter {
     public static void main(String[] args) {
 
+        String outputfile = null;
+        if(args.length > 0) {
+            outputfile = args[0];
+        }
+
         String filePath = "data.csv";
 
         Charset ch = StandardCharsets.UTF_8;
@@ -72,6 +77,6 @@ public class Converter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        onto.writeModel();
+        onto.writeModel(outputfile);
     }
 }

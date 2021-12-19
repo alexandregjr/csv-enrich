@@ -3,6 +3,9 @@ package org.edpirro.alexandregjr.main;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.vocabulary.RDFS;
+
+import java.io.PrintWriter;
+
 import org.apache.jena.ontology.DatatypeProperty;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.ObjectProperty;
@@ -86,7 +89,19 @@ public class Ontology {
         return this.model.createIndividual(ns + name, type);
     }
 
-    public void writeModel() {
-        this.model.write(System.out, "ttl");
+    public void writeModel(String filename) {
+        if(filename == null) {
+            this.model.write(System.out, "ttl");
+        } else {
+            try {
+                System.out.println("Writing model to " + filename + ".");
+                PrintWriter pw = new PrintWriter(filename);
+                this.model.write(pw, "ttl");
+            } catch (Exception e) {
+                System.out.println("Could not write to file " + filename + ". Writing to Sytem.out instead.");
+                this.model.write(System.out, "ttl");
+            }
+            
+        }
     }
 }
