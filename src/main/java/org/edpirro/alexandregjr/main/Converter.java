@@ -53,14 +53,14 @@ public class Converter {
                 String[] data = line.split(separator);
                 ResultSet result;
 
-                System.out.println("\tFetching organism...");
                 Individual organism = null;
 
                 if (!data[33].isEmpty()) {
+                    System.out.println("\tFetching organism...");
                     engineWD.createQueryByValue(Query.getOrganismByTaxonId(data[33]));
                     result = engineWD.executeRemoteSelectQuery();
                     if (result.hasNext()) {
-                        System.out.println("\tFound organism! Using existing location.");
+                        System.out.println("\tFound organism! Using existing organism.");
                         organism = onto.createIndividual(result.next().get("species").toString(), onto.getClass("Organism"), "");
                     } else {
                         System.out.println("\tCreating organism.");
@@ -87,9 +87,9 @@ public class Converter {
                         organism.addProperty(onto.getDatatypeProperty("species"), data[9]);
                 }
 
-                System.out.println("\tFetching location...");
                 Individual location = null;
                 if (!data[16].isEmpty()) {
+                    System.out.println("\tFetching location...");
                     String locationName = data[16].split(",")[0];
                     engineDBP.createQueryByValue(Query.locationByCityNameQuery(locationName));
                     result = engineDBP.executeRemoteSelectQuery();
