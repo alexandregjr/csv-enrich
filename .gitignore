@@ -2,4 +2,5 @@ target
 data.csv
 
 *.iml
+*.ttl
 .idea

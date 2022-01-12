@@ -1,8 +1,6 @@
 package org.edpirro.alexandregjr.main;
 import org.apache.jena.ontology.Individual;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFormatter;
-import org.apache.jena.vocabulary.OWL2;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -30,6 +28,7 @@ public class Converter {
             offset = 0;
             limit = 236489; // maxElems + 1 -> all items
         }
+
         String format = "Exporting lines %d to %d, model will attempt to write to %s.";
         System.out.println(String.format(format, offset + 1, offset + limit, outputfile == null ? "the standard output" : outputfile));
 
@@ -55,47 +54,81 @@ public class Converter {
                 ResultSet result;
 
                 System.out.println("\tFetching organism...");
-                Individual organism;
-                engineWD.createQueryByValue(Query.getOrganismByTaxonId(data[33]));
-                result = engineWD.executeRemoteSelectQuery();
-                if (result.hasNext()) {
-                    organism = onto.createIndividual(result.next().get("species").toString(), onto.getClass("Organism"), "");
+                Individual organism = null;
+
+                if (!data[33].isEmpty()) {
+                    engineWD.createQueryByValue(Query.getOrganismByTaxonId(data[33]));
+                    result = engineWD.executeRemoteSelectQuery();
+                    if (result.hasNext()) {
+                        System.out.println("\tFound organism! Using existing location.");
+                        organism = onto.createIndividual(result.next().get("species").toString(), onto.getClass("Organism"), "");
+                    } else {
+                        System.out.println("\tCreating organism.");
+                        organism = onto.createIndividual(data[33], onto.getClass("Organism"));
+                    }
                 } else {
-                    organism = onto.createIndividual(data[34], onto.getClass("Organism"));
+                    System.out.println("\tNULL Organism.");
                 }
 
-                organism.addProperty(onto.getDatatypeProperty("kingdom"), data[3]);
-                organism.addProperty(onto.getDatatypeProperty("phylum"), data[4]);
-                organism.addProperty(onto.getDatatypeProperty("class"), data[5]);
-                organism.addProperty(onto.getDatatypeProperty("order"), data[6]);
-                organism.addProperty(onto.getDatatypeProperty("family"), data[7]);
-                organism.addProperty(onto.getDatatypeProperty("genus"), data[8]);
-                organism.addProperty(onto.getDatatypeProperty("species"), data[9]);
+                if (organism != null) {
+                    if (!data[3].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("kingdom"), data[3]);
+                    if (!data[4].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("phylum"), data[4]);
+                    if (!data[5].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("class"), data[5]);
+                    if (!data[6].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("order"), data[6]);
+                    if (!data[7].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("family"), data[7]);
+                    if (!data[8].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("genus"), data[8]);
+                    if (!data[9].isEmpty())
+                        organism.addProperty(onto.getDatatypeProperty("species"), data[9]);
+                }
 
                 System.out.println("\tFetching location...");
-                Individual location;
-                String locationName = data[16].split(",")[0];
-                engineDBP.createQueryByValue(Query.locationByCityNameQuery(locationName));
-                result = engineDBP.executeRemoteSelectQuery();
-                if (result.hasNext()) {
-                    location = onto.createIndividual(result.next().get("place").toString(), onto.getClass("Location"), "");
+                Individual location = null;
+                if (!data[16].isEmpty()) {
+                    String locationName = data[16].split(",")[0];
+                    engineDBP.createQueryByValue(Query.locationByCityNameQuery(locationName));
+                    result = engineDBP.executeRemoteSelectQuery();
+                    if (result.hasNext()) {
+                        System.out.println("\tFound resource! Using existing location.");
+                        location = onto.createIndividual(result.next().get("place").toString(), onto.getClass("Location"), "");
+                    } else {
+                        System.out.println("\tCreating location.");
+                        location = onto.createIndividual(locationName, onto.getClass("Location"));
+                    }
                 } else {
-                    location = onto.createIndividual(locationName, onto.getClass("Location"));
+                    System.out.println("\tNULL Location.");
                 }
 
-                location.addProperty(onto.getDatatypeProperty("countryCode"), data[15]);
-                location.addProperty(onto.getDatatypeProperty("locality"), data[16]);
-                location.addProperty(onto.getDatatypeProperty("stateProvince"), data[17]);
-                location.addProperty(onto.getDatatypeProperty("latitude"), data[21]);
-                location.addProperty(onto.getDatatypeProperty("longitude"), data[22]);
+                if (location != null) {
+                    if (!data[15].isEmpty())
+                        location.addProperty(onto.getDatatypeProperty("countryCode"), data[15]);
+                    if (!data[16].isEmpty())
+                        location.addProperty(onto.getDatatypeProperty("locality"), data[16]);
+                    if (!data[17].isEmpty())
+                        location.addProperty(onto.getDatatypeProperty("stateProvince"), data[17]);
+                    if (!data[21].isEmpty())
+                        location.addProperty(onto.getDatatypeProperty("latitude"), data[21]);
+                    if (!data[22].isEmpty())
+                        location.addProperty(onto.getDatatypeProperty("longitude"), data[22]);
+                }
 
-                Individual occurrence = onto.createIndividual(data[2], onto.getClass("Occurrence"));
-                occurrence.addProperty(onto.getDatatypeProperty("date"), data[29]);
-                occurrence.addProperty(onto.getDatatypeProperty("status"), data[18]);
-                occurrence.addProperty(onto.getObjectProperty("organism"), organism);
-                occurrence.addProperty(onto.getObjectProperty("location"), location);
-                System.out.println("Done with line " + count[0]++ + "!\n");
-                
+                if (!data[2].isEmpty()) {
+                    Individual occurrence = onto.createIndividual(data[2], onto.getClass("Occurrence"));
+                    if (!data[29].isEmpty())
+                        occurrence.addProperty(onto.getDatatypeProperty("date"), data[29]);
+                    if (!data[18].isEmpty())
+                        occurrence.addProperty(onto.getDatatypeProperty("status"), data[18]);
+                    if (organism != null)
+                        occurrence.addProperty(onto.getObjectProperty("organism"), organism);
+                    if (location != null)
+                        occurrence.addProperty(onto.getObjectProperty("location"), location);
+                    System.out.println("Done with line " + count[0]++ + "!\n");
+                }
             });
         } catch (IOException e) {
             e.printStackTrace();
