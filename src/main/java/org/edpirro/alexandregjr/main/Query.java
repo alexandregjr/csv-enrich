@@ -14,8 +14,25 @@ public class Query {
             "       ?place geo:long ?lng .\n" +
             "   } LIMIT 10";
 
+    private static final String LOCATION_BY_LAT_LONG =
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"+
+                    "PREFIX dbo: <http://dbpedia.org/ontology/>\n" +
+                    "PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>\n" +
+                    "PREFIX xsd: <w3.org/2001/XMLSchema#>\n" +
+                    "SELECT DISTINCT ?place ?label ?lat ?lng\n" +
+                    "   WHERE { \n" +
+                    "       ?place a dbo:Place .\n" +
+                    "       ?place rdfs:label ?label .\n" +
+                    "       ?place geo:lat \"%f\"^^xsd:float .\n" +
+                    "       ?place geo:long \"%f\"^^xsd:float .\n" +
+                    "   } LIMIT 10";
+
     public static String locationByCityNameQuery(String city) {
         return String.format(LOCATION_BY_CITY_NAME, city);
+    }
+
+    public static String locationByLatLongQuery(float lat, float lng) {
+        return String.format(LOCATION_BY_LAT_LONG, lat, lng);
     }
 
     public static final String ORGANISM_BY_ID =
