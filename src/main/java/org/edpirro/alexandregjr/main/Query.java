@@ -1,6 +1,17 @@
 package org.edpirro.alexandregjr.main;
 
+/**
+ * Defines a query, used to easily generate query strings to be processed by RQEngine
+ * @see RQEngine
+ * 
+ * @author Alexandre Galocha Pinto Juniro - 10734706
+ * @author Eduardo Pirro - 10734665
+ */
 public class Query {
+
+    /**
+     * Template for location queries
+     */
     private static final String LOCATION_BY_CITY_NAME =
             "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"+
             "PREFIX dbo: <http://dbpedia.org/ontology/>\n" +
@@ -14,10 +25,18 @@ public class Query {
             "       ?place geo:long ?lng .\n" +
             "   } LIMIT 10";
 
+    /**
+     * Generates a SPARQL query using location query template formatted with the given city name
+     * @param city - location name
+     * @return String - SPARQL query ready to be used by RQEngine
+     */
     public static String locationByCityNameQuery(String city) {
         return String.format(LOCATION_BY_CITY_NAME, city);
     }
 
+    /**
+     * Template for organism queries
+     */
     public static final String ORGANISM_BY_ID =
             "PREFIX wdt: <http://www.wikidata.org/prop/direct/>\n" +
             "SELECT DISTINCT ?species\n" +
@@ -25,6 +44,11 @@ public class Query {
             "       ?species wdt:P846 \"%s\" .\n" +
             "   } LIMIT 10";
 
+    /**
+     * Generates a SPARQL query using organism query template formatted with the given taxon ID
+     * @param id - organism's taxon ID
+     * @return String - SPARQL query ready to be used by RQEngine
+     */
     public static String getOrganismByTaxonId(String id) {
         return String.format(ORGANISM_BY_ID, id);
     }
