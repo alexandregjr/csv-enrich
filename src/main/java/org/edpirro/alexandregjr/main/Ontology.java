@@ -52,6 +52,14 @@ public class Ontology {
             .addProperty(RDFS.domain, this.model.getResource(this.namespace + "Organism"));
         this.model.createDatatypeProperty(this.namespace + "species")
             .addProperty(RDFS.domain, this.model.getResource(this.namespace + "Organism"));
+        this.model.createDatatypeProperty(this.namespace + "taxonRangeMinLat")
+            .addProperty(RDFS.domain, this.model.getResource(this.namespace + "Organism"));
+        this.model.createDatatypeProperty(this.namespace + "taxonRangeMaxLat")
+            .addProperty(RDFS.domain, this.model.getResource(this.namespace + "Organism"));
+        this.model.createDatatypeProperty(this.namespace + "taxonRangeMinLong")
+            .addProperty(RDFS.domain, this.model.getResource(this.namespace + "Organism"));
+        this.model.createDatatypeProperty(this.namespace + "taxonRangeMaxLong")
+            .addProperty(RDFS.domain, this.model.getResource(this.namespace + "Organism"));
 
 
         // Definition of a Location class with Datatype Properties [countryCode, locality, stateProvince, latitude, longitude]

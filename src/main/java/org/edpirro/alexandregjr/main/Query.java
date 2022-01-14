@@ -65,9 +65,10 @@ public class Query {
      */
     public static final String ORGANISM_BY_ID =
             "PREFIX wdt: <http://www.wikidata.org/prop/direct/>\n" +
-            "SELECT DISTINCT ?species\n" +
+            "SELECT DISTINCT ?species ?scientificName\n" +
             "   WHERE { \n" +
-            "       ?species wdt:P846 \"%s\" .\n" +
+            "       ?species wdt:P846 \"%s\" ;\n" +
+            "       wdt:P225 ?scientificName .\n" +
             "   } LIMIT 10";
 
     /**
@@ -77,5 +78,39 @@ public class Query {
      */
     public static String getOrganismByTaxonId(String id) {
         return String.format(ORGANISM_BY_ID, id);
+    }
+
+    /**
+     * Template for taxon location range query
+     */
+    public static final String TAXON_RANGE_BY_SCIENTIFIC_NAME =
+            "prefix dwc: <http://rs.tdwg.org/dwc/terms/>\n" +
+            "prefix dwciri: <http://rs.tdwg.org/dwc/iri/>\n" +
+            "prefix dct:     <http://purl.org/dc/terms/>\n" +
+            "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n" +
+            "SELECT\n" +
+            "     (?measurementType as ?TYPE)\n" +
+            "     (MAX(xsd:float(?measurementValue)) as ?MAX)\n" +
+            "     (MIN(xsd:float(?measurementValue)) as ?MIN)\n" +
+            "WHERE {\n" +
+            "    ?taxon a dwc:Taxon;\n" +
+            "        dwc:scientificName \"%s\";\n" +
+            "        dct:relation ?measure.\n" +
+            "    ?measure\n" +
+            "        a                       dwc:MeasurementOrFact;\n" +
+            "        dwc:measurementType     ?measurementType;\n" +
+            "        dwc:measurementValue    ?measurementValue.\n" +
+            "    OPTIONAL { ?measure dwc:measurementUnit     ?measurementUnit }\n" +
+            "    OPTIONAL { ?measure dwciri:measurementUnit  ?measurementUnitUri }\n" +
+            "    FILTER (?measurementType = \"latitude\"  || ?measurementType = \"longitude\")\n" +
+            "} GROUP BY ?measurementType";
+
+    /**
+     * Generates a SPARQL query using organism query template formatted with the given taxon ID
+     * @param id - organism's taxon ID
+     * @return String - SPARQL query ready to be used by RQEngine
+     */
+    public static String getTaxonRangeByScientificName(String scientificName) {
+        return String.format(TAXON_RANGE_BY_SCIENTIFIC_NAME, scientificName);
     }
 }

@@ -1,10 +1,14 @@
 package org.edpirro.alexandregjr.main;
 import org.apache.jena.ontology.Individual;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
+import javax.swing.text.StyledEditorKit;
 
 /**
  * Converter class, holds a single method: the main procedure. 
@@ -75,6 +79,7 @@ public class Converter {
         // Defines two SPARQL query engines one for wikidata queries (used to fetch organisms data), and another for depedia queries (to fetch locations data)
         RQEngine engineWD = new RQEngine("http://query.wikidata.org/sparql");
         RQEngine engineDBP = new RQEngine("https://dbpedia.org/sparql");
+        RQEngine engineEOL = new RQEngine("https://sparql-micro-services.org/service/eol/getTraitsByTaxon_sd/");
 
         int[] count = {offset + 1};
 
@@ -90,6 +95,7 @@ public class Converter {
                 ResultSet result;
 
                 Individual organism = null;
+                String wikiDataTaxonName = null;
 
                 if (!data[33].isEmpty()) { // data[33] references the 34th (0-based) column in the CSV which is taxonKey
                     System.out.println("\tFetching organism...");
@@ -97,13 +103,45 @@ public class Converter {
                     result = engineWD.executeRemoteSelectQuery();
                     if (result.hasNext()) { // if such organism exists, use it
                         System.out.println("\tFound organism! Using existing organism.");
-                        organism = onto.createIndividual(result.next().get("species").toString(), onto.getClass("Organism"), "");
+                        QuerySolution cur = result.next();
+                        organism = onto.createIndividual(cur.get("species").toString(), onto.getClass("Organism"), "");
+                        wikiDataTaxonName = cur.get("scientificName").toString();
                     } else { // else create a new one
                         System.out.println("\tCreating organism.");
                         organism = onto.createIndividual(data[33], onto.getClass("Organism"));
                     }
                 } else { // CSV entry has no organism
                     System.out.println("\tNULL Organism.");
+                }
+
+                if (wikiDataTaxonName != null) { // if able to gather scientific name from wikidata
+                    System.out.println("\tFetching organism's taxon range...");
+                    engineEOL.createQueryByValue(Query.getTaxonRangeByScientificName(wikiDataTaxonName)); // search encyclopedia of life for organism's taxon range coordinates
+                    result = engineEOL.executeRemoteSelectQuery();
+                    int cnt = 0;
+                    String[] coords = new String[4];
+                    while (result.hasNext() && cnt < 2) {
+                        QuerySolution cur = result.next();
+                        if(!cur.contains("TYPE") || !cur.contains("MAX") || cur.get("MAX") == null || !cur.contains("MIN") || cur.get("MIN") == null) break; // if any needed data is missing break;
+                        if(cur.get("TYPE").toString().toLowerCase().trim().equals("latitude")) {
+                            coords[0] = cur.get("MAX").toString();
+                            coords[1] = cur.get("MIN").toString();
+                        } else if(cur.get("TYPE").toString().toLowerCase().trim().equals("longitude")) {
+                            coords[2] = cur.get("MAX").toString();
+                            coords[3] = cur.get("MIN").toString();
+                        }
+                        ++cnt;
+                    } 
+
+                    if(cnt == 2) {
+                        System.out.println("\tFound coordinates, populating!");
+                        organism.addProperty(onto.getDatatypeProperty("taxonRangeMaxLat"), coords[0]);
+                        organism.addProperty(onto.getDatatypeProperty("taxonRangeMinLat"), coords[1]);
+                        organism.addProperty(onto.getDatatypeProperty("taxonRangeMaxLong"), coords[2]);
+                        organism.addProperty(onto.getDatatypeProperty("taxonRangeMinLong"), coords[3]);
+                    } else System.out.println("\tNot enough coordinates to generate taxon range map, skipping...");
+                } else { // CSV entry has no organism
+                    System.out.println("\tCould not find organism entry in wikidata, skipping range map...");
                 }
 
                 if (organism != null) { // link available data to the organism
